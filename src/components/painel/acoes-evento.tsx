@@ -182,13 +182,15 @@ export function ExcluirEventoBotao({
   id,
   titulo,
   inscritos,
+  trabalhos,
 }: {
   id: string;
   titulo: string;
   inscritos: number;
+  trabalhos: number;
 }) {
   const router = useRouter();
-  if (inscritos > 0) {
+  if (inscritos > 0 || trabalhos > 0) {
     return (
       <div className="space-y-2">
         <Button variant="destructive" className="h-11 px-6 text-base" disabled>
@@ -196,8 +198,14 @@ export function ExcluirEventoBotao({
           Excluir evento
         </Button>
         <p className="text-sm text-muted-foreground">
-          Só é possível excluir eventos sem inscritos. Este tem {inscritos}{" "}
-          {inscritos === 1 ? "inscrito" : "inscritos"}.
+          Só é possível excluir eventos sem inscritos e sem trabalhos. Este tem{" "}
+          {[
+            inscritos > 0 && `${inscritos} ${inscritos === 1 ? "inscrito" : "inscritos"}`,
+            trabalhos > 0 && `${trabalhos} ${trabalhos === 1 ? "trabalho" : "trabalhos"}`,
+          ]
+            .filter(Boolean)
+            .join(" e ")}
+          .
         </p>
       </div>
     );

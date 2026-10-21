@@ -2,23 +2,7 @@
 // e `hint` com um código estável. Aqui convertemos qualquer erro do Supabase numa
 // mensagem amigável, sem vazar detalhes técnicos.
 
-export type CodigoErro =
-  | "nao_autenticado"
-  | "perfil_incompleto"
-  | "evento_indisponivel"
-  | "inscricoes_encerradas"
-  | "atividade_invalida"
-  | "vagas_esgotadas"
-  | "choque_horario"
-  | "nao_inscrito"
-  | "presenca_registrada"
-  | "sem_permissao"
-  | "atividade_encerrada"
-  | "atividade_com_inscritos"
-  | "evento_com_inscritos"
-  | "vagas_abaixo_inscritos";
-
-const CODIGOS = new Set<string>([
+const LISTA_CODIGOS = [
   "nao_autenticado",
   "perfil_incompleto",
   "evento_indisponivel",
@@ -33,7 +17,22 @@ const CODIGOS = new Set<string>([
   "atividade_com_inscritos",
   "evento_com_inscritos",
   "vagas_abaixo_inscritos",
-]);
+  // fase 2: lista de espera
+  "ha_vagas",
+  "ja_inscrito",
+  // fase 2: trabalhos
+  "evento_com_trabalhos",
+  "atividade_com_trabalhos",
+  "submissoes_encerradas",
+  "limite_trabalhos",
+  "trabalho_invalido",
+  "trabalho_avaliado",
+  "arquivo_ausente",
+] as const;
+
+export type CodigoErro = (typeof LISTA_CODIGOS)[number];
+
+const CODIGOS = new Set<string>(LISTA_CODIGOS);
 
 type ErroSupabase = { message?: string; hint?: string | null; code?: string } | null | undefined;
 

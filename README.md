@@ -17,8 +17,22 @@ organização. Alternativa mais simples à Even3.
 - **Presença:** leitura do QR code pela câmera do celular, lista para marcar à mão ou
   digitação do código.
 
-Ainda não: certificados, CPF, pagamento, submissão de trabalhos. Dependem de definições
-da coordenação (LGPD, exigências da pró-reitoria de extensão).
+## Fase 2
+
+- **Lista de espera automática:** atividade lotada aceita fila. Quando alguém desiste,
+  cancela ou a organização aumenta as vagas, o primeiro da fila entra sozinho e recebe
+  e-mail. Um lugar na fila conta como horário ocupado (não dá para pegar outra atividade
+  no mesmo horário).
+- **Submissão de trabalhos:** a organização abre o envio (prazo, instruções, áreas
+  temáticas); o participante envia título, resumo, coautores e PDF (até 10 MB); a
+  organização aprova ou não (o autor recebe e-mail) e coloca os aprovados em sessões de
+  apresentação, que aparecem na programação.
+- **E-mails:** ficam numa fila no banco e saem logo após a ação (`after()`); a rota
+  `/api/cron/emails` reenvia pendentes (uma vez por dia na Vercel gratuita).
+
+Ainda não: certificados, CPF, pagamento, avaliação por pares e anais. Dependem de
+definições da coordenação (LGPD, exigências da pró-reitoria de extensão, conta de
+recebimento).
 
 ## Regras importantes (ficam no banco, não só na tela)
 
@@ -38,15 +52,16 @@ npm install
 npx supabase start
 ```
 
-Copie `.env.example` para `.env.local` e preencha com a `ANON_KEY` mostrada por
-`npx supabase status`. Depois:
+Copie `.env.example` para `.env.local` e preencha `NEXT_PUBLIC_SUPABASE_ANON_KEY` e
+`SUPABASE_SERVICE_ROLE_KEY` com os valores de `npx supabase status` (a service role é só
+do servidor: usada apenas pela fila de e-mails). Depois:
 
 ```bash
 npm run dev
 ```
 
 - Site: http://localhost:3000
-- E-mails (código de acesso): http://127.0.0.1:55424 (Mailpit)
+- E-mails (código de acesso, vaga liberada, resultado de trabalho): http://127.0.0.1:55424 (Mailpit)
 - Banco (Supabase Studio): http://127.0.0.1:55423
 
 Contas de teste da organização (entre com o código que chega no Mailpit):

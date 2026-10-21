@@ -13,7 +13,7 @@ import { BaixarListaBotao } from "./baixar-lista";
 import { DialogAtividade } from "./dialog-atividade";
 import { ExcluirAtividadeBotao } from "./excluir-atividade";
 
-export type ContagemAtividade = { inscritos: number; presentes: number };
+export type ContagemAtividade = { inscritos: number; presentes: number; fila: number; trabalhos?: number };
 
 export function ListaAtividades({
   eventoId,
@@ -70,7 +70,7 @@ export function ListaAtividades({
           </h3>
           <ul className="space-y-3">
             {itens.map((a) => {
-              const c = contagens[a.id] ?? { inscritos: 0, presentes: 0 };
+              const c = contagens[a.id] ?? { inscritos: 0, presentes: 0, fila: 0 };
               return (
                 <li key={a.id}>
                   <Card size="sm">
@@ -97,6 +97,12 @@ export function ListaAtividades({
                             {a.vagas === null ? " (vagas ilimitadas)" : ` de ${a.vagas} vagas`}
                           </dd>
                         </div>
+                        {c.fila > 0 && (
+                          <div className="flex gap-1">
+                            <dt className="text-muted-foreground">Lista de espera:</dt>
+                            <dd className="font-medium text-warning">{c.fila} na lista de espera</dd>
+                          </div>
+                        )}
                         <div className="flex gap-1">
                           <dt className="text-muted-foreground">Presentes:</dt>
                           <dd className="font-medium">{c.presentes}</dd>
@@ -111,6 +117,7 @@ export function ListaAtividades({
                         <DialogAtividade
                           eventoId={eventoId}
                           atividade={a}
+                          trabalhos={c.trabalhos ?? 0}
                           dataPadrao={dataPadrao}
           dataFim={dataFim}
                           gatilho={

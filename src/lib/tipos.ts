@@ -9,6 +9,7 @@ export type Evento = Tabelas["eventos"]["Row"];
 export type Atividade = Tabelas["atividades"]["Row"];
 export type Inscricao = Tabelas["inscricoes"]["Row"];
 export type InscricaoAtividade = Tabelas["inscricoes_atividades"]["Row"];
+export type Trabalho = Tabelas["trabalhos"]["Row"];
 
 export type StatusEvento = "rascunho" | "publicado" | "encerrado";
 export type TipoAtividade =
@@ -44,9 +45,31 @@ export type ResultadoPresenca =
   | "inscricao_cancelada"
   | "codigo_invalido";
 
-/** Linha de vagas_por_atividade(): vagas null = ilimitadas. */
-export type VagasAtividade = { atividade_id: string; vagas: number | null; ocupadas: number };
+/** Linha de vagas_por_atividade(): vagas null = ilimitadas; fila = pessoas na lista de espera. */
+export type VagasAtividade = { atividade_id: string; vagas: number | null; ocupadas: number; fila: number };
 
 export function vagasRestantes(v: Pick<VagasAtividade, "vagas" | "ocupadas">) {
   return v.vagas === null ? null : Math.max(0, v.vagas - v.ocupadas);
 }
+
+/** inscricoes_atividades.status */
+export type StatusInscricaoAtividade = "confirmada" | "lista_espera" | "cancelada";
+
+export type StatusTrabalho = "submetido" | "aprovado" | "reprovado" | "retirado";
+export type ModalidadeTrabalho = "oral" | "poster";
+
+export const ROTULO_STATUS_TRABALHO: Record<StatusTrabalho, string> = {
+  submetido: "Em análise",
+  aprovado: "Aprovado",
+  reprovado: "Não aprovado",
+  retirado: "Retirado",
+};
+
+export const ROTULO_MODALIDADE: Record<ModalidadeTrabalho, string> = {
+  oral: "Apresentação oral",
+  poster: "Pôster",
+};
+
+/** Bucket do Storage com os PDFs. Caminho: {evento_id}/{autor_id}/{trabalho_id}.pdf */
+export const BUCKET_TRABALHOS = "trabalhos";
+export const TAMANHO_MAX_PDF = 10 * 1024 * 1024;

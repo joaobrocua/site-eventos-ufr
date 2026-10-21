@@ -48,6 +48,7 @@ export function DialogAtividade({
   atividade,
   dataPadrao,
   dataFim,
+  trabalhos = 0,
   gatilho,
 }: {
   eventoId: string;
@@ -56,6 +57,8 @@ export function DialogAtividade({
   dataPadrao: string;
   /** Último dia do evento, para avisar sobre datas fora do período. */
   dataFim: string;
+  /** Trabalhos vinculados a esta atividade (sessão): impedem trocar o tipo. */
+  trabalhos?: number;
   gatilho: ReactElement;
 }) {
   const [aberto, setAberto] = useState(false);
@@ -74,6 +77,7 @@ export function DialogAtividade({
           atividade={atividade}
           dataPadrao={dataPadrao}
           dataFim={dataFim}
+          trabalhos={trabalhos}
           aoSalvar={() => setAberto(false)}
         />
       </DialogContent>
@@ -86,12 +90,14 @@ function FormAtividade({
   atividade,
   dataPadrao,
   dataFim,
+  trabalhos,
   aoSalvar,
 }: {
   eventoId: string;
   atividade?: Atividade;
   dataPadrao: string;
   dataFim: string;
+  trabalhos: number;
   aoSalvar: () => void;
 }) {
   const router = useRouter();
@@ -140,6 +146,7 @@ function FormAtividade({
       const r = await chamar(() => salvarAtividade(eventoId, atividade?.id ?? null, entrada));
       if (!r.ok) {
         setErro(r.erro);
+        toast.error(r.erro);
         return;
       }
       toast.success(atividade ? "Atividade atualizada." : "Atividade adicionada.");
@@ -163,7 +170,7 @@ function FormAtividade({
 
       <div className="space-y-2">
         <Label htmlFor="at-tipo">Tipo *</Label>
-        <Select items={ITENS_TIPO} value={tipo} onValueChange={(v) => v && setTipo(v as TipoAtividade)}>
+        <Select items={ITENS_TIPO} value={tipo} disabled={trabalhos > 0 && atividade?.tipo === "apresentacao"} onValueChange={(v) => v && setTipo(v as TipoAtividade)}>
           <SelectTrigger id="at-tipo" className="h-11 w-full text-base">
             <SelectValue />
           </SelectTrigger>
@@ -175,6 +182,11 @@ function FormAtividade({
             ))}
           </SelectContent>
         </Select>
+        {trabalhos > 0 && atividade?.tipo === "apresentacao" && (
+          <p className="text-xs text-muted-foreground">
+            O tipo não pode mudar enquanto houver trabalhos nesta sessão ({trabalhos}). Desvincule-os na aba Trabalhos.
+          </p>
+        )}
       </div>
 
       <Campo id="at-palestrantes" rotulo="Palestrante(s)" ajuda="Separe os nomes por vírgula.">

@@ -6,17 +6,20 @@ type Horario = { id: string; titulo: string; inicio: string; fim: string };
 /**
  * Para cada atividade NÃO selecionada que choca com alguma já escolhida,
  * devolve o título da atividade com a qual ela choca (para mostrar o motivo).
- * `fixas` são atividades em que o aluno já está inscrito (contam como escolhidas).
+ * `fixas` são atividades em que o aluno já está inscrito e `naFila` as da lista de
+ * espera: as duas contam como horário ocupado (um lugar na fila pode virar vaga a qualquer momento).
  */
 export function bloqueiosPorChoque(
   atividades: Horario[],
   selecionadas: ReadonlySet<string>,
   fixas: ReadonlySet<string> = new Set(),
+  naFila: ReadonlySet<string> = new Set(),
 ) {
-  const escolhidas = atividades.filter((a) => selecionadas.has(a.id) || fixas.has(a.id));
+  const ocupada = (id: string) => selecionadas.has(id) || fixas.has(id) || naFila.has(id);
+  const escolhidas = atividades.filter((a) => ocupada(a.id));
   const bloqueios = new Map<string, string>();
   for (const a of atividades) {
-    if (selecionadas.has(a.id) || fixas.has(a.id)) continue;
+    if (ocupada(a.id)) continue;
     const outra = escolhidas.find((e) => e.id !== a.id && haChoque(a, e));
     if (outra) bloqueios.set(a.id, outra.titulo);
   }
@@ -46,17 +49,41 @@ export const MENSAGEM_SITUACAO = {
   prazo_encerrado: "O prazo de inscrição deste evento terminou.",
 } as const;
 
-/** "Vagas ilimitadas" / "Restam 3 vagas" / "Resta 1 vaga" / "Esgotado" */
-export function textoVagas(v: { vagas: number | null; ocupadas: number } | undefined) {
+type Lotacao = { vagas: number | null; ocupadas: number; fila?: number };
+
+/**
+ * Lotada = sem vagas OU com gente na fila (a fila existente tem prioridade
+ * sobre quem chega depois). Atividade de vagas ilimitadas nunca lota.
+ */
+export function estaEsgotada(v: Lotacao | undefined) {
+  if (!v || v.vagas === null) return false;
+  return vagasRestantes(v) === 0 || (v.fila ?? 0) > 0;
+}
+
+/** "Vagas ilimitadas" / "Restam 3 vagas" / "Resta 1 vaga" / "Lotado" / "Lotado · 2 na lista de espera" */
+export function textoVagas(v: Lotacao | undefined) {
   if (!v) return null;
+  if (estaEsgotada(v)) {
+    const f = v.fila ?? 0;
+    return f > 0 ? `Lotado · ${f} na lista de espera` : "Lotado";
+  }
   const r = vagasRestantes(v);
   if (r === null) return "Vagas ilimitadas";
-  if (r === 0) return "Esgotado";
   return r === 1 ? "Resta 1 vaga" : `Restam ${r} vagas`;
 }
 
-export function estaEsgotada(v: { vagas: number | null; ocupadas: number } | undefined) {
-  return !!v && vagasRestantes(v) === 0;
+/** Mensagem após entrar na fila. */
+export function mensagemPosicaoFila(posicao: number) {
+  return `Você é o ${posicao}º da fila. Se abrir uma vaga, você será inscrito automaticamente e avisado por e-mail.`;
+}
+
+/** Envio de trabalhos aberto: evento publicado, flag ligada e prazo (se houver) no futuro. */
+export function submissoesAbertas(
+  e: { status: string; submissoes_abertas: boolean; submissoes_ate: string | null },
+  agora: Date = new Date(),
+) {
+  if (e.status !== "publicado" || !e.submissoes_abertas) return false;
+  return !e.submissoes_ate || agora.getTime() <= new Date(e.submissoes_ate).getTime();
 }
 
 /** Evento "anterior": encerrado ou com data_fim antes de hoje (dia local, YYYY-MM-DD). */

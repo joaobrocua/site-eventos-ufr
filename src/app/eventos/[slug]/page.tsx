@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { CalendarDays, CheckCircle2, Info, MapPin, QrCode } from "lucide-react";
+import { CalendarDays, CheckCircle2, FileText, Hourglass, Info, MapPin, QrCode } from "lucide-react";
 import { obterPerfil, obterUsuario } from "@/lib/auth";
-import { formatarData, formatarPeriodo } from "@/lib/datas";
-import { MENSAGEM_SITUACAO, situacaoInscricoes } from "@/lib/inscricao/regras";
+import { formatarData, formatarHora, formatarPeriodo } from "@/lib/datas";
+import { MENSAGEM_SITUACAO, situacaoInscricoes, submissoesAbertas } from "@/lib/inscricao/regras";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import type { AtividadePublica } from "@/components/publico/atividade-info";
@@ -34,23 +34,35 @@ export default async function PaginaEvento({ params }: PageProps<"/eventos/[slug
   if (!evento) notFound();
 
   const supabase = await createClient();
-  const [usuario, perfil, ativRes, vagasRes] = await Promise.all([
+  const [usuario, perfil, ativRes, vagasRes, trabRes] = await Promise.all([
     obterUsuario(),
     obterPerfil(),
     supabase.from("atividades").select("*").eq("evento_id", evento.id).order("inicio"),
     supabase.rpc("vagas_por_atividade", { p_evento_id: evento.id }),
+    supabase.rpc("trabalhos_da_programacao", { p_evento_id: evento.id }),
   ]);
 
-  const inscricaoRes =
+  const [inscricaoRes, filaRes] =
     usuario && perfil
-      ? await supabase
-          .from("inscricoes")
-          .select("id, inscricoes_atividades(atividade_id, status, presente_em)")
-          .eq("evento_id", evento.id)
-          .eq("usuario_id", usuario.id)
-          .eq("status", "confirmada")
-          .maybeSingle()
-      : null;
+      ? await Promise.all([
+          supabase
+            .from("inscricoes")
+            .select("id, inscricoes_atividades(atividade_id, status, presente_em)")
+            .eq("evento_id", evento.id)
+            .eq("usuario_id", usuario.id)
+            .eq("status", "confirmada")
+            .maybeSingle(),
+          supabase.rpc("minhas_posicoes_fila", { p_evento_id: evento.id }),
+        ])
+      : [null, null];
+
+  const trabalhosPorAtividade = new Map<string, AtividadePublica["trabalhos"]>();
+  // A função já devolve na ordem de apresentação.
+  for (const t of trabRes.data ?? []) {
+    const lista = trabalhosPorAtividade.get(t.atividade_id) ?? [];
+    lista.push({ id: t.trabalho_id, titulo: t.titulo, autores: t.autores, modalidade: t.modalidade });
+    trabalhosPorAtividade.set(t.atividade_id, lista);
+  }
 
   const vagasPorId = new Map((vagasRes.data ?? []).map((v) => [v.atividade_id, v]));
   const atividades: AtividadePublica[] = (ativRes.data ?? []).map((a) => ({
@@ -64,14 +76,18 @@ export default async function PaginaEvento({ params }: PageProps<"/eventos/[slug
     fim: a.fim,
     carga_horaria_minutos: a.carga_horaria_minutos,
     vagas: vagasPorId.get(a.id),
+    trabalhos: trabalhosPorAtividade.get(a.id) ?? [],
   }));
 
   const situacao = situacaoInscricoes(evento);
   const inscricao = inscricaoRes?.data ?? null;
   const ativasInscricao = (inscricao?.inscricoes_atividades ?? []).filter((x) => x.status === "confirmada");
+  const fila = (filaRes?.data ?? []).map((f) => ({ atividadeId: f.atividade_id, posicao: f.posicao }));
   const inscritas = ativasInscricao.map((x) => x.atividade_id);
   const presentes = ativasInscricao.filter((x) => x.presente_em).map((x) => x.atividade_id);
-  const inscrito = !!inscricao;
+  // "Inscrito" = ao menos uma atividade confirmada (quem só está na fila ainda não tem QR code).
+  const inscrito = inscritas.length > 0;
+  const apenasNaFila = !inscrito && fila.length > 0;
   const caminho = `/eventos/${evento.slug}`;
   const proximo = encodeURIComponent(caminho);
   const logadoSemPerfil = !!usuario && !perfil;
@@ -96,6 +112,30 @@ export default async function PaginaEvento({ params }: PageProps<"/eventos/[slug
         {evento.descricao && <p className="whitespace-pre-line">{evento.descricao}</p>}
       </header>
 
+      {submissoesAbertas(evento) && (
+        <section
+          aria-label="Envio de trabalhos"
+          className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="space-y-1">
+            <p className="flex items-center gap-2 font-semibold">
+              <FileText className="size-5 shrink-0" aria-hidden />
+              {evento.submissoes_ate
+                ? `Envio de trabalhos aberto até ${formatarData(evento.submissoes_ate).slice(0, 5)} às ${formatarHora(evento.submissoes_ate)}`
+                : "Envio de trabalhos aberto"}
+            </p>
+            <p className="text-sm text-muted-foreground">Quer apresentar um trabalho neste evento?</p>
+          </div>
+          <Button
+            className="h-11 text-base"
+            render={<Link href={`/eventos/${evento.slug}/trabalhos`} />}
+            nativeButton={false}
+          >
+            Enviar trabalho
+          </Button>
+        </section>
+      )}
+
       <section aria-label="Sua inscrição" className="space-y-3">
         {inscrito && (
           <div className="flex flex-col gap-3 rounded-xl border border-success/40 bg-success/10 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -113,6 +153,16 @@ export default async function PaginaEvento({ params }: PageProps<"/eventos/[slug
               Ver meu QR code
             </Button>
           </div>
+        )}
+
+        {apenasNaFila && (
+          <p className="flex items-start gap-2 rounded-xl border border-warning/50 bg-warning/10 p-4 font-medium">
+            <Hourglass className="mt-0.5 size-5 shrink-0" aria-hidden />
+            <span>
+              Você está na lista de espera. Se abrir uma vaga, você será inscrito automaticamente e
+              avisado por e-mail.
+            </span>
+          </p>
         )}
 
         {!inscrito && !situacao.abertas && (
@@ -176,6 +226,7 @@ export default async function PaginaEvento({ params }: PageProps<"/eventos/[slug
             inscrito={inscrito}
             inscritas={inscritas}
             presentes={presentes}
+            fila={fila}
           />
         )}
       </section>

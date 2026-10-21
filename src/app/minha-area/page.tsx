@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import QRCode from "qrcode";
-import { CalendarSearch, CheckCircle2, Clock, MapPin } from "lucide-react";
+import { CalendarSearch, CheckCircle2, Clock, FileText, Hourglass, MapPin } from "lucide-react";
 import { exigirPerfil } from "@/lib/auth";
 import { formatarDiaLongo, formatarIntervaloHoras, formatarPeriodo } from "@/lib/datas";
 import { createClient } from "@/lib/supabase/server";
@@ -30,8 +30,26 @@ export default async function PaginaMinhaArea() {
     .order("criado_em", { ascending: false });
 
   const inscricoes = await Promise.all(
-    (data ?? []).map(async (i) => ({ ...i, svg: await qrSvg(i.codigo) })),
+    (data ?? []).map(async (i) => {
+      const ativas = (i.inscricoes_atividades ?? []).filter((x) => x.atividades);
+      const temConfirmada = ativas.some((x) => x.status === "confirmada");
+      const temFila = ativas.some((x) => x.status === "lista_espera");
+
+      // Posições só para quem tem atividade na fila; QR só para quem tem atividade confirmada.
+      let posicoes = new Map<string, number>();
+      let falhouFila = false;
+      if (temFila && i.eventos?.id) {
+        const { data: pos, error: erroPos } = await supabase.rpc("minhas_posicoes_fila", {
+          p_evento_id: i.eventos.id,
+        });
+        if (erroPos) falhouFila = true;
+        else posicoes = new Map((pos ?? []).map((p) => [p.atividade_id, p.posicao]));
+      }
+      return { ...i, temConfirmada, svg: temConfirmada ? await qrSvg(i.codigo) : null, posicoes, falhouFila };
+    }),
   );
+
+  const erroFila = inscricoes.some((i) => i.falhouFila);
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:py-12">
@@ -50,9 +68,23 @@ export default async function PaginaMinhaArea() {
         </Button>
       </header>
 
+      <Link
+        href="/minha-area/trabalhos"
+        className="flex items-center gap-3 rounded-xl border bg-card p-4 font-medium hover:border-primary/50"
+      >
+        <FileText className="size-5 shrink-0" aria-hidden />
+        Meus trabalhos
+      </Link>
+
       {error && (
         <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
           Não foi possível carregar as suas inscrições agora. Tente novamente em instantes.
+        </p>
+      )}
+
+      {erroFila && (
+        <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+          Não foi possível carregar a sua posição na lista de espera agora.
         </p>
       )}
 
@@ -69,7 +101,7 @@ export default async function PaginaMinhaArea() {
       {inscricoes.map((i) => {
         const evento = i.eventos;
         const atividades = (i.inscricoes_atividades ?? [])
-          .filter((x) => x.status === "confirmada" && x.atividades)
+          .filter((x) => (x.status === "confirmada" || x.status === "lista_espera") && x.atividades)
           .map((x) => ({ ...x, atividade: x.atividades! }))
           .sort((a, b) => a.atividade.inicio.localeCompare(b.atividade.inicio));
 
@@ -93,6 +125,7 @@ export default async function PaginaMinhaArea() {
               )}
             </CardHeader>
             <CardContent className="space-y-6">
+              {i.svg ? (
               <div className="flex flex-col items-center gap-3 rounded-xl bg-muted/50 p-4">
                 <div
                   role="img"
@@ -104,6 +137,12 @@ export default async function PaginaMinhaArea() {
                   Mostre este QR code na entrada de cada atividade.
                 </p>
               </div>
+              ) : (
+                <p className="rounded-xl bg-muted/50 p-4 font-medium">
+                  Você está na lista de espera. O QR code aparece aqui assim que uma vaga abrir e você
+                  for inscrito automaticamente.
+                </p>
+              )}
 
               <div className="space-y-3">
                 <h2 className="font-semibold">Minhas atividades</h2>
@@ -118,7 +157,7 @@ export default async function PaginaMinhaArea() {
                   </p>
                 ) : (
                   <ul className="space-y-2">
-                    {atividades.map(({ atividade: a, presente_em }) => (
+                    {atividades.map(({ atividade: a, presente_em, status }) => (
                       <li key={a.id} className="space-y-1 rounded-lg border p-3">
                         <p className="font-medium">{a.titulo}</p>
                         <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -136,7 +175,13 @@ export default async function PaginaMinhaArea() {
                             {a.local}
                           </p>
                         )}
-                        {presente_em ? (
+                        {status === "lista_espera" ? (
+                          <p className="flex items-center gap-1.5 text-sm font-medium">
+                            <Hourglass className="size-4 text-warning" aria-hidden />
+                            Lista de espera
+                            {i.posicoes.get(a.id) ? ` · você é o ${i.posicoes.get(a.id)}º` : ""}
+                          </p>
+                        ) : presente_em ? (
                           <p className="flex items-center gap-1.5 text-sm font-medium text-success">
                             <CheckCircle2 className="size-4" aria-hidden />
                             Presença registrada

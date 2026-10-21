@@ -151,3 +151,64 @@ export const atividadeSchema = z
   }));
 
 export type AtividadeEntrada = z.output<typeof atividadeSchema>;
+
+/** Configuração de recebimento de trabalhos do evento. */
+export const configTrabalhosSchema = z
+  .object({
+    abertas: z.boolean(),
+    ate_data: z.string().optional().default(""),
+    ate_hora: z.string().optional().default(""),
+    instrucoes: textoOpcional(5000, "As instruções"),
+    areas: z.array(z.string()).max(30, "No máximo 30 áreas temáticas."),
+  })
+  .superRefine((v, ctx) => {
+    for (const a of v.areas) {
+      if (a.trim().length > 120) {
+        ctx.addIssue({ code: "custom", path: ["areas"], message: "Cada área pode ter no máximo 120 caracteres." });
+        break;
+      }
+    }
+    if (!v.ate_data && !v.ate_hora) return;
+    if (!dataValida(v.ate_data) || !RE_HORA.test(v.ate_hora)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["ate_data"],
+        message: "Para definir um prazo, informe a data e a hora (ou deixe os dois vazios).",
+      });
+    }
+  })
+  .transform((v) => ({
+    submissoes_abertas: v.abertas,
+    submissoes_ate: v.ate_data && v.ate_hora ? paraInstanteCuiaba(v.ate_data, v.ate_hora) : null,
+    submissao_instrucoes: v.instrucoes,
+    // tira vazias e repetidas (sem diferenciar maiúsculas)
+    areas_tematicas: limparAreas(v.areas),
+  }));
+
+export function limparAreas(areas: string[]) {
+  const vistas = new Set<string>();
+  const saida: string[] = [];
+  for (const bruta of areas) {
+    const a = bruta.trim().replace(/\s+/g, " ");
+    if (!a || vistas.has(a.toLowerCase())) continue;
+    vistas.add(a.toLowerCase());
+    saida.push(a);
+  }
+  return saida;
+}
+
+export const decisaoTrabalhoSchema = z.object({
+  status: z.enum(["aprovado", "reprovado", "submetido"], "Escolha uma decisão."),
+  parecer: z.string().trim().max(3000, "O comentário pode ter no máximo 3000 caracteres.").optional().default(""),
+});
+
+export const sessaoTrabalhoSchema = z.object({
+  atividade_id: idSchema.nullable(),
+  ordem: z
+    .string()
+    .optional()
+    .default("")
+    .transform((v) => v.trim())
+    .refine((v) => v === "" || /^\d{1,3}$/.test(v) && Number(v) >= 1, "A ordem deve ser um número de 1 a 999.")
+    .transform((v) => (v === "" ? null : Number(v))),
+});

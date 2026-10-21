@@ -37,6 +37,9 @@ from ev, (values
   ('Oficina: Currículo e LinkedIn', 'Como apresentar sua trajetória acadêmica.', 'oficina',
      'Carreiras UFR', 'Sala 12',
      '2026-11-10 14:00:00-04', '2026-11-10 16:00:00-04', 25, 120),
+  ('Sessão de apresentações orais', 'Apresentação dos trabalhos aprovados.', 'apresentacao',
+     'Autores dos trabalhos', 'Sala 20',
+     '2026-11-11 14:00:00-04', '2026-11-11 17:00:00-04', null::int, 180),
   ('Mesa-redonda: Pesquisa e extensão', 'Experiências de projetos do campus.', 'mesa_redonda',
      'Professores convidados', 'Auditório central',
      '2026-11-11 19:00:00-04', '2026-11-11 21:00:00-04', null::int, 120),
@@ -44,6 +47,15 @@ from ev, (values
      'Prof. Carlos Lima', 'Laboratório 1',
      '2026-11-12 08:00:00-04', '2026-11-12 12:00:00-04', 2, 240)
 ) as a(titulo, descricao, tipo, palestrantes, local, inicio, fim, vagas, carga);
+
+-- Submissão de trabalhos aberta na Semana Acadêmica.
+update public.eventos
+set submissoes_abertas = true,
+    submissoes_ate = '2026-11-05 23:59:00-04',
+    areas_tematicas = array['Engenharias', 'Ciências Exatas', 'Ciências Humanas', 'Saúde'],
+    submissao_instrucoes = 'Envie um resumo expandido de até 2 páginas em PDF. '
+      || 'Trabalhos aprovados serão apresentados na Sessão de apresentações orais.'
+where slug = 'semana-academica-2026';
 
 insert into public.eventos
   (slug, titulo, resumo, local, data_inicio, data_fim, status)

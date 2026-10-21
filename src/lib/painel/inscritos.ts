@@ -6,6 +6,8 @@ export type InscritoPainel = {
   rga: string | null;
   curso: string | null;
   atividades: { atividade_id: string; presente_em: string | null }[];
+  /** Atividades em que está só na lista de espera (não contam como inscrito nelas). */
+  fila: string[];
 };
 
 const normalizar = (t: string) =>

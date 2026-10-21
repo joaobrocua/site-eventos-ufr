@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { exigirOrganizador } from "@/lib/auth";
+import { agendarEnvioDeEmails } from "@/lib/email/fila";
 import { mensagemDoErro, type ResultadoAcao } from "@/lib/erros";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -146,6 +147,15 @@ export async function excluirEvento(id: string): Promise<ResultadoAcao> {
     return { ok: false, erro: "Este evento já tem inscrições e não pode ser excluído. Use \"Encerrar evento\"." };
   }
 
+  const { count: trabalhos, error: erroTrabalhos } = await supabase
+    .from("trabalhos")
+    .select("id", { count: "exact", head: true })
+    .eq("evento_id", id);
+  if (erroTrabalhos) return { ok: false, erro: mensagemDoErro(erroTrabalhos) };
+  if (trabalhos) {
+    return { ok: false, erro: "Este evento já recebeu trabalhos e não pode ser excluído. Use \"Encerrar evento\"." };
+  }
+
   const { data: removido, error } = await supabase
     .from("eventos")
     .delete()
@@ -205,6 +215,8 @@ export async function salvarAtividade(
       .select("id");
     if (error) return { ok: false, erro: mensagemDoErro(error) };
     if (!salvo?.length) return { ok: false, erro: "Atividade não encontrada." };
+    // Mais vagas promovem a lista de espera no banco; os avisos saem por e-mail.
+    agendarEnvioDeEmails();
   }
 
   revalidarEvento(eventoId, evento.slug);

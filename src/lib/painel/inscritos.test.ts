@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { filtrarInscritos, type InscritoPainel } from "./inscritos";
 
 const lista: InscritoPainel[] = [
-  { id: "1", nome: "João Álvares", email: "joao@x.com", rga: "202011111", curso: null, atividades: [{ atividade_id: "a", presente_em: null }] },
-  { id: "2", nome: "Maria Souza", email: "maria@x.com", rga: null, curso: null, atividades: [] },
+  { id: "1", nome: "João Álvares", email: "joao@x.com", rga: "202011111", curso: null, atividades: [{ atividade_id: "a", presente_em: null }], fila: [] },
+  { id: "2", nome: "Maria Souza", email: "maria@x.com", rga: null, curso: null, atividades: [], fila: [] },
 ];
 
 describe("filtrarInscritos", () => {

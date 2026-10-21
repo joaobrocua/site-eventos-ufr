@@ -1,12 +1,25 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Hourglass, Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { agruparPorDia, formatarDiaLongo } from "@/lib/datas";
-import { bloqueiosPorChoque, estaEsgotada, jaAconteceu, textoSelecionadas } from "@/lib/inscricao/regras";
-import { cancelarInscricao, inscrever, removerAtividade } from "@/app/eventos/[slug]/actions";
+import {
+  bloqueiosPorChoque,
+  estaEsgotada,
+  jaAconteceu,
+  mensagemPosicaoFila,
+  textoSelecionadas,
+} from "@/lib/inscricao/regras";
+import {
+  cancelarInscricao,
+  entrarListaEspera,
+  inscrever,
+  removerAtividade,
+  sairListaEspera,
+} from "@/app/eventos/[slug]/actions";
+import type { ResultadoAcao } from "@/lib/erros";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +46,8 @@ type Props = {
   inscrito: boolean;
   inscritas: string[];
   presentes: string[];
+  /** Atividades em que o aluno está na lista de espera. */
+  fila: { atividadeId: string; posicao: number }[];
 };
 
 const ERRO_SEM_CONEXAO = "Sem conexão. Tente novamente.";
@@ -47,6 +62,7 @@ export function Programacao({
   inscrito,
   inscritas,
   presentes,
+  fila,
 }: Props) {
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [erro, setErro] = useState<string | null>(null);
@@ -57,11 +73,13 @@ export function Programacao({
   const [agora] = useState(() => new Date());
 
   const fixas = useMemo(() => new Set(inscritas), [inscritas]);
+  const posicaoNaFila = useMemo(() => new Map(fila.map((f) => [f.atividadeId, f.posicao])), [fila]);
+  const idsNaFila = useMemo(() => new Set(fila.map((f) => f.atividadeId)), [fila]);
   const jaPresente = useMemo(() => new Set(presentes), [presentes]);
   const dias = useMemo(() => agruparPorDia(atividades), [atividades]);
   const bloqueios = useMemo(
-    () => bloqueiosPorChoque(atividades, selecionadas, fixas),
-    [atividades, selecionadas, fixas],
+    () => bloqueiosPorChoque(atividades, selecionadas, fixas, idsNaFila),
+    [atividades, selecionadas, fixas, idsNaFila],
   );
   const total = selecionadas.size;
 
@@ -75,10 +93,10 @@ export function Programacao({
     });
   }
 
-  function executar(
+  function executar<T>(
     chave: string,
-    acao: () => Promise<{ ok: true } | { ok: false; erro: string; codigo?: string | null }>,
-    sucesso: string,
+    acao: () => Promise<ResultadoAcao<T>>,
+    sucesso: string | ((dados: T) => string),
     aoTerminar?: () => void,
   ) {
     setErro(null);
@@ -94,7 +112,7 @@ export function Programacao({
           if (r.codigo) router.refresh();
           return;
         }
-        toast.success(sucesso);
+        toast.success(typeof sucesso === "function" ? sucesso(r.dados) : sucesso);
         aoTerminar?.();
       } catch {
         setErro(ERRO_SEM_CONEXAO);
@@ -118,6 +136,18 @@ export function Programacao({
     executar(`remover:${id}`, () => removerAtividade({ atividadeId: id, slug }), "Atividade removida.");
   }
 
+  function entrarNaFila(id: string) {
+    executar(
+      `fila:${id}`,
+      () => entrarListaEspera({ atividadeId: id, slug }),
+      (d) => mensagemPosicaoFila(d.posicao),
+    );
+  }
+
+  function sairDaFila(id: string) {
+    executar(`sair:${id}`, () => sairListaEspera({ atividadeId: id, slug }), "Você saiu da lista de espera.");
+  }
+
   function cancelar() {
     executar("cancelar", () => cancelarInscricao({ eventoId, slug }), "Inscrição cancelada.", () => {
       setConfirmarCancelar(false);
@@ -135,11 +165,12 @@ export function Programacao({
           <ul className="space-y-3">
             {itens.map((a) => {
               const estaInscrita = fixas.has(a.id);
+              const posicao = posicaoNaFila.get(a.id);
               const marcada = selecionadas.has(a.id);
               const encerrada = jaAconteceu(a, agora);
               const motivo = encerrada ? "Já aconteceu" : bloqueios.get(a.id);
               const esgotada = estaEsgotada(a.vagas);
-              const escolhivel = podeEscolher && !estaInscrita;
+              const escolhivel = podeEscolher && !estaInscrita && posicao === undefined;
               const desabilitada = pendente || !!motivo || (esgotada && !marcada);
               const tituloId = `ativ-${a.id}`;
               const presente = jaPresente.has(a.id);
@@ -178,6 +209,44 @@ export function Programacao({
                         <AlertTriangle className="size-4 shrink-0 text-warning" aria-hidden />
                         {encerrada ? motivo : `Mesmo horário de ${motivo}`}
                       </p>
+                    )}
+                    {escolhivel && esgotada && !marcada && !encerrada && !bloqueios.has(a.id) && (
+                      <Button
+                        variant="outline"
+                        className="h-11 text-base"
+                        disabled={pendente}
+                        onClick={() => entrarNaFila(a.id)}
+                      >
+                        {fazendo === `fila:${a.id}` && <Loader2 className="animate-spin" aria-hidden />}
+                        Entrar na lista de espera
+                      </Button>
+                    )}
+                    {escolhivel && esgotada && !marcada && !encerrada && !bloqueios.has(a.id) && (
+                      <p className="text-sm text-muted-foreground">
+                        O seu lugar na fila reserva este horário: você não poderá escolher outra atividade
+                        no mesmo horário. Se abrir uma vaga, você é inscrito automaticamente. Pode sair da
+                        fila quando quiser.
+                      </p>
+                    )}
+                    {posicao !== undefined && (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+                          <Hourglass className="size-4 text-warning" aria-hidden />
+                          Lista de espera · você é o {posicao}º
+                        </span>
+                        {podeAlterar && (
+                          <Button
+                            variant="outline"
+                            className="h-10"
+                            disabled={pendente}
+                            onClick={() => sairDaFila(a.id)}
+                            aria-label={`Sair da fila de ${a.titulo}`}
+                          >
+                            {fazendo === `sair:${a.id}` && <Loader2 className="animate-spin" aria-hidden />}
+                            Sair da fila
+                          </Button>
+                        )}
+                      </div>
                     )}
                     {estaInscrita && (
                       <div className="flex flex-wrap items-center gap-3">

@@ -124,7 +124,7 @@ export function TabelaInscritos({
                     <TableCell>{i.rga ?? "—"}</TableCell>
                     <TableCell className="whitespace-normal">{i.curso ?? "—"}</TableCell>
                     <TableCell className="whitespace-normal">
-                      {i.atividades.length === 0 ? (
+                      {i.atividades.length === 0 && i.fila.length === 0 ? (
                         <span className="text-muted-foreground">Nenhuma</span>
                       ) : (
                         <ul className="space-y-0.5">
@@ -135,6 +135,11 @@ export function TabelaInscritos({
                             </li>
                           ))}
                         </ul>
+                      )}
+                      {i.fila.length > 0 && (
+                        <p className="mt-1 text-xs text-warning">
+                          Na fila: {i.fila.map((f) => titulos[f] ?? "Atividade removida").join(", ")}
+                        </p>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
