@@ -31,13 +31,23 @@ export function separarRemetente(remetente: string) {
 const RODAPE =
   "\n\n—\nEventos UFR · Universidade Federal de Rondonópolis\nEste é um e-mail automático; não responda.";
 
-export function montarTexto(m: Mensagem) {
-  const saudacao = m.nome ? `Olá, ${m.nome.split(/\s+/)[0]}!\n\n` : "Olá!\n\n";
-  return saudacao + m.texto + RODAPE;
+/** O banco escreve "{{SITE}}" nos e-mails; aqui vira o endereço real do site. */
+export function trocarSite(texto: string, site: string | undefined) {
+  return texto.replaceAll("{{SITE}}", (site || "http://localhost:3000").replace(/\/$/, ""));
 }
 
-export async function enviarEmail(m: Mensagem, transporte: Transporte, fetcher: typeof fetch = fetch) {
-  const texto = montarTexto(m);
+export function montarTexto(m: Mensagem, site?: string) {
+  const saudacao = m.nome ? `Olá, ${m.nome.split(/\s+/)[0]}!\n\n` : "Olá!\n\n";
+  return trocarSite(saudacao + m.texto + RODAPE, site);
+}
+
+export async function enviarEmail(
+  m: Mensagem,
+  transporte: Transporte,
+  fetcher: typeof fetch = fetch,
+  site: string | undefined = process.env.NEXT_PUBLIC_SITE_URL,
+) {
+  const texto = montarTexto(m, site);
 
   if (transporte.tipo === "resend") {
     const r = await fetcher("https://api.resend.com/emails", {

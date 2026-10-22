@@ -57,16 +57,68 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"eventos": {
+                },"certificados": {
                   Row: {
-                    "areas_tematicas": (string)[],"atualizado_em": string,"capa_url": string | null,"criado_em": string,"criado_por": string | null,"data_fim": string,"data_inicio": string,"descricao": string | null,"id": string,"inscricoes_abertas": boolean,"inscricoes_ate": string | null,"local": string | null,"resumo": string | null,"slug": string,"status": string,"submissao_instrucoes": string | null,"submissoes_abertas": boolean,"submissoes_ate": string | null,"titulo": string
+                    "atividades": NonNullable<Json>,"atualizado_em": string,"carga_horaria_minutos": number,"codigo": string,"documento": string | null,"emitido_em": string,"equipe_id": string | null,"evento_id": string,"funcao": string | null,"id": string,"nome": string,"revogado_em": string | null,"revogado_manual": boolean,"revogado_motivo": string | null,"tipo": string,"usuario_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "areas_tematicas"?: (string)[],"atualizado_em"?: string,"capa_url"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_fim": string,"data_inicio": string,"descricao"?: string | null,"id"?: string,"inscricoes_abertas"?: boolean,"inscricoes_ate"?: string | null,"local"?: string | null,"resumo"?: string | null,"slug": string,"status"?: string,"submissao_instrucoes"?: string | null,"submissoes_abertas"?: boolean,"submissoes_ate"?: string | null,"titulo": string
+                    "atividades"?: NonNullable<Json>,"atualizado_em"?: string,"carga_horaria_minutos": number,"codigo": string,"documento"?: string | null,"emitido_em"?: string,"equipe_id"?: string | null,"evento_id": string,"funcao"?: string | null,"id"?: string,"nome": string,"revogado_em"?: string | null,"revogado_manual"?: boolean,"revogado_motivo"?: string | null,"tipo": string,"usuario_id"?: string | null
                   }
                   Update: {
-                    "areas_tematicas"?: (string)[],"atualizado_em"?: string,"capa_url"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_fim"?: string,"data_inicio"?: string,"descricao"?: string | null,"id"?: string,"inscricoes_abertas"?: boolean,"inscricoes_ate"?: string | null,"local"?: string | null,"resumo"?: string | null,"slug"?: string,"status"?: string,"submissao_instrucoes"?: string | null,"submissoes_abertas"?: boolean,"submissoes_ate"?: string | null,"titulo"?: string
+                    "atividades"?: NonNullable<Json>,"atualizado_em"?: string,"carga_horaria_minutos"?: number,"codigo"?: string,"documento"?: string | null,"emitido_em"?: string,"equipe_id"?: string | null,"evento_id"?: string,"funcao"?: string | null,"id"?: string,"nome"?: string,"revogado_em"?: string | null,"revogado_manual"?: boolean,"revogado_motivo"?: string | null,"tipo"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "certificados_equipe_id_fkey"
+      columns: ["equipe_id"]
+isOneToOne: false
+      referencedRelation: "equipe_evento"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificados_evento_id_fkey"
+      columns: ["evento_id"]
+isOneToOne: false
+      referencedRelation: "eventos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"equipe_evento": {
+                  Row: {
+                    "atividade_id": string | null,"atualizado_em": string,"carga_horaria_minutos": number,"criado_em": string,"email": string | null,"evento_id": string,"funcao": string,"id": string,"nome": string,"tipo": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "atividade_id"?: string | null,"atualizado_em"?: string,"carga_horaria_minutos": number,"criado_em"?: string,"email"?: string | null,"evento_id": string,"funcao": string,"id"?: string,"nome": string,"tipo": string
+                  }
+                  Update: {
+                    "atividade_id"?: string | null,"atualizado_em"?: string,"carga_horaria_minutos"?: number,"criado_em"?: string,"email"?: string | null,"evento_id"?: string,"funcao"?: string,"id"?: string,"nome"?: string,"tipo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "equipe_evento_atividade_id_fkey"
+      columns: ["atividade_id"]
+isOneToOne: false
+      referencedRelation: "atividades"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "equipe_evento_evento_id_fkey"
+      columns: ["evento_id"]
+isOneToOne: false
+      referencedRelation: "eventos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"eventos": {
+                  Row: {
+                    "areas_tematicas": (string)[],"atualizado_em": string,"capa_url": string | null,"certificado_assinaturas": NonNullable<Json>,"certificado_promotor": string | null,"certificado_registro": string | null,"certificado_texto": string | null,"certificados_liberados_em": string | null,"criado_em": string,"criado_por": string | null,"data_fim": string,"data_inicio": string,"descricao": string | null,"id": string,"inscricoes_abertas": boolean,"inscricoes_ate": string | null,"local": string | null,"resumo": string | null,"slug": string,"status": string,"submissao_instrucoes": string | null,"submissoes_abertas": boolean,"submissoes_ate": string | null,"titulo": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "areas_tematicas"?: (string)[],"atualizado_em"?: string,"capa_url"?: string | null,"certificado_assinaturas"?: NonNullable<Json>,"certificado_promotor"?: string | null,"certificado_registro"?: string | null,"certificado_texto"?: string | null,"certificados_liberados_em"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_fim": string,"data_inicio": string,"descricao"?: string | null,"id"?: string,"inscricoes_abertas"?: boolean,"inscricoes_ate"?: string | null,"local"?: string | null,"resumo"?: string | null,"slug": string,"status"?: string,"submissao_instrucoes"?: string | null,"submissoes_abertas"?: boolean,"submissoes_ate"?: string | null,"titulo": string
+                  }
+                  Update: {
+                    "areas_tematicas"?: (string)[],"atualizado_em"?: string,"capa_url"?: string | null,"certificado_assinaturas"?: NonNullable<Json>,"certificado_promotor"?: string | null,"certificado_registro"?: string | null,"certificado_texto"?: string | null,"certificados_liberados_em"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_fim"?: string,"data_inicio"?: string,"descricao"?: string | null,"id"?: string,"inscricoes_abertas"?: boolean,"inscricoes_ate"?: string | null,"local"?: string | null,"resumo"?: string | null,"slug"?: string,"status"?: string,"submissao_instrucoes"?: string | null,"submissoes_abertas"?: boolean,"submissoes_ate"?: string | null,"titulo"?: string
                   }
                   Relationships: [
                     
@@ -125,14 +177,14 @@ isOneToOne: false
                   ]
                 },"notificacoes_email": {
                   Row: {
-                    "assunto": string,"corpo": string,"criada_em": string,"enviada_em": string | null,"id": number,"processando_em": string | null,"tentativas": number,"ultimo_erro": string | null,"usuario_id": string
+                    "assunto": string,"corpo": string,"criada_em": string,"email_destino": string | null,"enviada_em": string | null,"id": number,"nome_destino": string | null,"processando_em": string | null,"tentativas": number,"ultimo_erro": string | null,"usuario_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "assunto": string,"corpo": string,"criada_em"?: string,"enviada_em"?: string | null,"id"?: never,"processando_em"?: string | null,"tentativas"?: number,"ultimo_erro"?: string | null,"usuario_id": string
+                    "assunto": string,"corpo": string,"criada_em"?: string,"email_destino"?: string | null,"enviada_em"?: string | null,"id"?: never,"nome_destino"?: string | null,"processando_em"?: string | null,"tentativas"?: number,"ultimo_erro"?: string | null,"usuario_id"?: string | null
                   }
                   Update: {
-                    "assunto"?: string,"corpo"?: string,"criada_em"?: string,"enviada_em"?: string | null,"id"?: never,"processando_em"?: string | null,"tentativas"?: number,"ultimo_erro"?: string | null,"usuario_id"?: string
+                    "assunto"?: string,"corpo"?: string,"criada_em"?: string,"email_destino"?: string | null,"enviada_em"?: string | null,"id"?: never,"nome_destino"?: string | null,"processando_em"?: string | null,"tentativas"?: number,"ultimo_erro"?: string | null,"usuario_id"?: string | null
                   }
                   Relationships: [
                     
@@ -209,11 +261,26 @@ isOneToOne: false
 "_enfileirar_email":
 { Args: { "p_assunto": string,"p_corpo": string,"p_usuario": string }; Returns: undefined
                            },
+"_enfileirar_email_para":
+{ Args: { "p_assunto": string,"p_corpo": string,"p_email": string,"p_nome": string }; Returns: undefined
+                           },
+"_gerar_codigo_certificado":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"_mascarar_documento":
+{ Args: { "p_documento": string }; Returns: string
+                           },
+"_meu_email_confirmado":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "_pode_apagar_arquivo":
 { Args: { "p_nome": string }; Returns: boolean
                            },
 "_pode_enviar_arquivo":
 { Args: { "p_nome": string }; Returns: boolean
+                           },
+"_pode_ver_certificado":
+{ Args: { "p_equipe": string,"p_usuario": string }; Returns: boolean
                            },
 "_promover_fila":
 { Args: { "p_atividade_id": string }; Returns: number
@@ -236,6 +303,11 @@ isOneToOne: false
 "confirmar_arquivo_trabalho":
 { Args: { "p_trabalho_id": string }; Returns: undefined
                            },
+"dados_certificado":
+{ Args: { "p_codigo": string }; Returns: {
+              "atividades": Json,"atualizado_em": string,"carga_horaria_minutos": number,"certificado_assinaturas": Json,"certificado_promotor": string,"certificado_registro": string,"certificado_texto": string,"codigo": string,"data_fim": string,"data_inicio": string,"documento": string,"emitido_em": string,"evento_local": string,"evento_titulo": string,"funcao": string,"nome": string,"tipo": string
+            }[]
+                           },
 "decidir_trabalho":
 { Args: { "p_parecer"?: string,"p_status": string,"p_trabalho_id": string }; Returns: undefined
                            },
@@ -245,11 +317,19 @@ isOneToOne: false
 "eh_organizador":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"emails_pendentes":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "entrar_lista_espera":
 { Args: { "p_atividade_id": string }; Returns: number
                            },
 "inscrever_em_evento":
 { Args: { "p_atividades"?: (string)[],"p_evento_id": string }; Returns: string
+                           },
+"liberar_certificados":
+{ Args: { "p_evento_id": string }; Returns: {
+              "atualizados": number,"novos": number,"revogados": number
+            }[]
                            },
 "marcar_presenca_manual":
 { Args: { "p_atividade_id": string,"p_inscricao_id": string,"p_presente": boolean }; Returns: string
@@ -261,6 +341,9 @@ isOneToOne: false
 { Args: { "p_evento_id": string }; Returns: {
               "atividade_id": string,"posicao": number
             }[]
+                           },
+"normalizar_codigo_certificado":
+{ Args: { "p_codigo": string }; Returns: string
                            },
 "registrar_auditoria":
 { Args: { "p_acao": string,"p_detalhes"?: Json }; Returns: undefined
@@ -281,6 +364,9 @@ isOneToOne: false
 "retirar_trabalho":
 { Args: { "p_trabalho_id": string }; Returns: undefined
                            },
+"revogar_certificado":
+{ Args: { "p_certificado_id": string,"p_motivo": string }; Returns: undefined
+                           },
 "sair_lista_espera":
 { Args: { "p_atividade_id": string }; Returns: undefined
                            },
@@ -295,6 +381,11 @@ isOneToOne: false
 "vagas_por_atividade":
 { Args: { "p_evento_id": string }; Returns: {
               "atividade_id": string,"fila": number,"ocupadas": number,"vagas": number
+            }[]
+                           },
+"validar_certificado":
+{ Args: { "p_codigo": string }; Returns: {
+              "atividades": Json,"atualizado_em": string,"carga_horaria_minutos": number,"codigo": string,"data_fim": string,"data_inicio": string,"documento_mascarado": string,"emitido_em": string,"evento_local": string,"evento_titulo": string,"funcao": string,"nome": string,"revogado_em": string,"revogado_motivo": string,"tipo": string
             }[]
                            },
 "vincular_trabalho_sessao":

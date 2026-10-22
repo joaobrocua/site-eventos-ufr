@@ -57,6 +57,22 @@ set submissoes_abertas = true,
       || 'Trabalhos aprovados serão apresentados na Sessão de apresentações orais.'
 where slug = 'semana-academica-2026';
 
+-- Certificado: assinaturas (nomes fictícios) e equipe.
+update public.eventos
+set certificado_assinaturas = '[{"nome": "Coordenação do Curso (exemplo)", "cargo": "Coordenador(a) do Curso"},
+                               {"nome": "Comissão Organizadora (exemplo)", "cargo": "Presidente da Comissão"}]'::jsonb,
+    certificado_promotor = 'Coordenação do Curso (exemplo)'
+where slug = 'semana-academica-2026';
+
+insert into public.equipe_evento (evento_id, nome, email, tipo, funcao, atividade_id, carga_horaria_minutos)
+select e.id, 'Ana Souza (exemplo)', 'ana.souza@ufr.test', 'palestrante', 'Ministrante do minicurso', a.id, 240
+from public.eventos e join public.atividades a on a.evento_id = e.id
+where e.slug = 'semana-academica-2026' and a.titulo like 'Minicurso: Introdução%';
+
+insert into public.equipe_evento (evento_id, nome, tipo, funcao, carga_horaria_minutos)
+select e.id, 'Monitor de Exemplo', 'organizacao', 'Monitor(a)', 720
+from public.eventos e where e.slug = 'semana-academica-2026';
+
 insert into public.eventos
   (slug, titulo, resumo, local, data_inicio, data_fim, status)
 values (

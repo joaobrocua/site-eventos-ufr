@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { enviarEmail, escolherTransporte, montarTexto, separarRemetente } from "./transporte";
+import { enviarEmail, escolherTransporte, montarTexto, separarRemetente, trocarSite } from "./transporte";
 
 describe("escolherTransporte", () => {
   it("prefere Resend quando configurado", () => {
@@ -25,6 +25,14 @@ describe("formatação", () => {
   });
   it("saúda pelo primeiro nome", () => {
     expect(montarTexto({ para: "a@x.com", nome: "Maria da Silva", assunto: "x", texto: "corpo" })).toMatch(/^Olá, Maria!\n\ncorpo/);
+  });
+});
+
+describe("trocarSite", () => {
+  it("troca o marcador do banco pelo endereço do site", () => {
+    expect(trocarSite("Veja {{SITE}}/minha-area e {{SITE}}/x", "https://eventos.ufr.edu.br/")).toBe(
+      "Veja https://eventos.ufr.edu.br/minha-area e https://eventos.ufr.edu.br/x",
+    );
   });
 });
 

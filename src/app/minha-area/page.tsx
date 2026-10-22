@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import QRCode from "qrcode";
-import { CalendarSearch, CheckCircle2, Clock, FileText, Hourglass, MapPin } from "lucide-react";
+import { Award, CalendarSearch, CheckCircle2, Clock, FileText, Hourglass, MapPin } from "lucide-react";
 import { exigirPerfil } from "@/lib/auth";
 import { formatarDiaLongo, formatarIntervaloHoras, formatarPeriodo } from "@/lib/datas";
 import { createClient } from "@/lib/supabase/server";
@@ -74,6 +74,13 @@ export default async function PaginaMinhaArea() {
       >
         <FileText className="size-5 shrink-0" aria-hidden />
         Meus trabalhos
+      </Link>
+      <Link
+        href="/minha-area/certificados"
+        className="flex items-center gap-3 rounded-xl border bg-card p-4 font-medium hover:border-primary/50"
+      >
+        <Award className="size-5 shrink-0" aria-hidden />
+        Meus certificados
       </Link>
 
       {error && (

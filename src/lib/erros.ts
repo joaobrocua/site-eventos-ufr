@@ -28,6 +28,11 @@ const LISTA_CODIGOS = [
   "trabalho_invalido",
   "trabalho_avaliado",
   "arquivo_ausente",
+  // certificados
+  "atividades_em_andamento",
+  "evento_com_certificados",
+  "motivo_obrigatorio",
+  "certificado_invalido",
 ] as const;
 
 export type CodigoErro = (typeof LISTA_CODIGOS)[number];

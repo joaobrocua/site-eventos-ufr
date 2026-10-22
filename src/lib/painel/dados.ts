@@ -77,3 +77,21 @@ export async function buscarTrabalhos(supabase: Cliente, eventoId: string) {
   }
   return { dados, erro: null as unknown };
 }
+
+/** Certificados do evento (visíveis ao organizador pela RLS), paginados. */
+export async function buscarCertificados(supabase: Cliente, eventoId: string) {
+  const dados = [];
+  for (let inicio = 0; ; inicio += TAMANHO_PAGINA) {
+    const { data, error } = await supabase
+      .from("certificados")
+      .select("id, codigo, tipo, nome, carga_horaria_minutos, revogado_em, revogado_motivo")
+      .eq("evento_id", eventoId)
+      .order("nome", { ascending: true })
+      .order("id", { ascending: true })
+      .range(inicio, inicio + TAMANHO_PAGINA - 1);
+    if (error) return { dados: [], erro: error as unknown };
+    dados.push(...data);
+    if (data.length < TAMANHO_PAGINA) break;
+  }
+  return { dados, erro: null as unknown };
+}

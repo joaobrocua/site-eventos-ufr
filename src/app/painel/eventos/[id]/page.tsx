@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, ScanLine } from "lucide-react";
 import { exigirOrganizador } from "@/lib/auth";
 import { formatarPeriodo } from "@/lib/datas";
-import { buscarInscritos, buscarTrabalhos } from "@/lib/painel/dados";
+import { buscarCertificados, buscarInscritos, buscarTrabalhos } from "@/lib/painel/dados";
 import { type TrabalhoPainel } from "@/lib/painel/trabalhos";
+import { atividadesPendentes } from "@/lib/painel/certificados";
 import { idSchema } from "@/lib/painel/schemas";
 import { createClient } from "@/lib/supabase/server";
 import { ROTULO_STATUS_EVENTO, type StatusEvento, type StatusTrabalho } from "@/lib/tipos";
@@ -15,6 +16,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MensagemErro } from "@/components/painel/campo";
 import { AcoesStatus, CartaoInscricoes, ExcluirEventoBotao } from "@/components/painel/acoes-evento";
+import { ConfigCertificado } from "@/components/painel/config-certificado";
+import { EquipeEvento } from "@/components/painel/equipe-evento";
+import { LiberarCertificados } from "@/components/painel/liberar-certificados";
+import { ListaCertificados } from "@/components/painel/lista-certificados";
 import { ConfigTrabalhos } from "@/components/painel/config-trabalhos";
 import { ListaTrabalhos } from "@/components/painel/lista-trabalhos";
 import { FormEvento } from "@/components/painel/form-evento";
@@ -29,7 +34,7 @@ export async function generateMetadata({ params }: PageProps<"/painel/eventos/[i
   return { title: data?.titulo ?? "Evento" };
 }
 
-const ABAS = ["geral", "atividades", "inscritos", "trabalhos"] as const;
+const ABAS = ["geral", "atividades", "inscritos", "trabalhos", "certificados"] as const;
 
 export default async function PaginaEvento({
   params,
@@ -45,11 +50,14 @@ export default async function PaginaEvento({
   const { data: evento } = await supabase.from("eventos").select("*").eq("id", id).maybeSingle();
   if (!evento) notFound();
 
-  const [{ data: atividadesDb, error: erroAtividades }, inscritosRes, vagasRes, trabalhosRes] = await Promise.all([
+  const [{ data: atividadesDb, error: erroAtividades }, inscritosRes, vagasRes, trabalhosRes, certificadosRes, equipeRes, emailsRes] = await Promise.all([
     supabase.from("atividades").select("*").eq("evento_id", id).order("inicio", { ascending: true }),
     buscarInscritos(supabase, id),
     supabase.rpc("vagas_por_atividade", { p_evento_id: id }),
     buscarTrabalhos(supabase, id),
+    buscarCertificados(supabase, id),
+    supabase.from("equipe_evento").select("*").eq("evento_id", id).order("nome", { ascending: true }),
+    supabase.rpc("emails_pendentes"),
   ]);
   const atividades = atividadesDb ?? [];
   const inscritos = inscritosRes.dados;
@@ -96,8 +104,12 @@ export default async function PaginaEvento({
     .filter((a) => a.tipo === "apresentacao")
     .map((a) => ({ id: a.id, titulo: a.titulo, inicio: a.inicio }));
 
+  const equipe = equipeRes.data ?? [];
+  const participantesComPresenca = inscritos.filter((i) => i.atividades.some((a) => a.presente_em)).length;
+  const pendentes = atividadesPendentes(atividades);
+
   const status = evento.status as StatusEvento;
-  const erroCarga = !!erroAtividades || !!inscritosRes.erro || !!vagasRes.error || !!trabalhosRes.erro;
+  const erroCarga = !!erroAtividades || !!inscritosRes.erro || !!vagasRes.error || !!trabalhosRes.erro || !!certificadosRes.erro || !!equipeRes.error;
 
   return (
     <div className="space-y-6">
@@ -155,6 +167,9 @@ export default async function PaginaEvento({
           <TabsTrigger value="trabalhos" className="h-9 px-4">
             Trabalhos ({trabalhos.length})
           </TabsTrigger>
+          <TabsTrigger value="certificados" className="h-9 px-4">
+            Certificados
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="geral" className="space-y-6 pt-4">
@@ -195,7 +210,7 @@ export default async function PaginaEvento({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ExcluirEventoBotao id={id} titulo={evento.titulo} inscritos={inscritos.length} trabalhos={trabalhos.length} />
+                <ExcluirEventoBotao id={id} titulo={evento.titulo} inscritos={inscritos.length} trabalhos={trabalhos.length} certificados={certificadosRes.dados.length} />
               </CardContent>
             </Card>
           )}
@@ -244,6 +259,61 @@ export default async function PaginaEvento({
             </CardContent>
           </Card>
           <ListaTrabalhos trabalhos={trabalhos} sessoes={sessoes} />
+        </TabsContent>
+
+        <TabsContent value="certificados" className="space-y-6 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Liberar certificados</CardTitle>
+              <CardDescription>
+                Só depois que todas as atividades terminarem. Participantes precisam ter ao menos uma presença.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LiberarCertificados
+                eventoId={id}
+                status={status}
+                liberadoEm={evento.certificados_liberados_em}
+                atividadesPendentes={pendentes}
+                totalAtividades={atividades.length}
+                participantes={participantesComPresenca}
+                equipe={equipe.length}
+                emailsPendentes={typeof emailsRes.data === "number" ? emailsRes.data : 0}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Aparência do certificado</CardTitle>
+              <CardDescription>Texto, registro e assinaturas impressas.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ConfigCertificado evento={evento} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Equipe do evento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EquipeEvento
+                eventoId={id}
+                equipe={equipe}
+                atividades={atividades.map((a) => ({
+                  id: a.id,
+                  titulo: a.titulo,
+                  carga_horaria_minutos: a.carga_horaria_minutos,
+                }))}
+              />
+            </CardContent>
+          </Card>
+
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">Certificados emitidos</h2>
+            <ListaCertificados certificados={certificadosRes.dados} />
+          </section>
         </TabsContent>
       </Tabs>
     </div>

@@ -101,10 +101,16 @@ export default async function PaginaPresenca({
         <h1 className="text-2xl font-bold">Presença</h1>
         <p className="text-base text-muted-foreground">{evento.titulo}</p>
       </div>
-      {evento.status !== "publicado" && (
-        <p role="alert" className="rounded-xl bg-warning/15 p-4 text-base font-medium">
-          Este evento não está publicado. A presença só pode ser registrada com o evento publicado.
+      {evento.status === "encerrado" ? (
+        <p role="status" className="rounded-xl bg-warning/15 p-4 text-base font-medium">
+          Evento encerrado: revise as presenças na lista antes de liberar os certificados.
         </p>
+      ) : (
+        evento.status !== "publicado" && (
+          <p role="alert" className="rounded-xl bg-warning/15 p-4 text-base font-medium">
+            Este evento não está publicado. A presença só pode ser registrada com o evento publicado.
+          </p>
+        )
       )}
       <PainelPresenca
         key={atividadeId}
@@ -112,6 +118,7 @@ export default async function PaginaPresenca({
         atividades={atividades}
         atividadeId={atividadeId}
         inscritos={inscritos}
+        somenteLista={evento.status === "encerrado"}
       />
     </div>
   );

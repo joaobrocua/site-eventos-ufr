@@ -38,6 +38,7 @@ export function ConfirmarAcao({
   descricao: ReactNode;
   rotuloConfirmar: string;
   destrutivo?: boolean;
+  /** Vazio = a própria ação mostra o aviso de sucesso. */
   sucesso: string;
   aoConfirmar: () => Promise<ResultadoAcao>;
   /** Padrão: atualiza a página. Use para redirecionar (ex.: depois de excluir o evento). */
@@ -57,7 +58,7 @@ export function ConfirmarAcao({
         toast.error(r.erro);
         return;
       }
-      toast.success(sucesso);
+      if (sucesso) toast.success(sucesso);
       setAberto(false);
       if (aposSucesso) aposSucesso();
       else router.refresh();

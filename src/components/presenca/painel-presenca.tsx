@@ -28,14 +28,16 @@ type Props = {
   atividades: AtividadeOpcao[];
   atividadeId: string;
   inscritos: Inscrito[];
+  /** Evento encerrado: só a marcação manual na lista é aceita pelo banco. */
+  somenteLista?: boolean;
 };
 
 type Modo = "camera" | "lista" | "codigo";
 
 /** Use com `key={atividadeId}` para zerar o estado ao trocar de atividade. */
-export function PainelPresenca({ eventoId, atividades, atividadeId, inscritos }: Props) {
+export function PainelPresenca({ eventoId, atividades, atividadeId, inscritos, somenteLista = false }: Props) {
   const router = useRouter();
-  const [modo, setModo] = useState<Modo>("camera");
+  const [modo, setModo] = useState<Modo>(somenteLista ? "lista" : "camera");
   const registro = useRegistroPresenca(atividadeId);
 
   // Atualização otimista da lista: volta sozinha ao valor do servidor se a gravação falhar.
@@ -106,13 +108,13 @@ export function PainelPresenca({ eventoId, atividades, atividadeId, inscritos }:
 
       <Tabs value={modo} onValueChange={trocarModo}>
         <TabsList className="h-12! w-full">
-          <TabsTrigger value="camera" className="text-base">
+          <TabsTrigger value="camera" disabled={somenteLista} className="text-base">
             <ScanLine aria-hidden /> Câmera
           </TabsTrigger>
           <TabsTrigger value="lista" className="text-base">
             <ListChecks aria-hidden /> Lista
           </TabsTrigger>
-          <TabsTrigger value="codigo" className="text-base">
+          <TabsTrigger value="codigo" disabled={somenteLista} className="text-base">
             <Keyboard aria-hidden /> Código
           </TabsTrigger>
         </TabsList>

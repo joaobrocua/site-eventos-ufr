@@ -156,6 +156,15 @@ export async function excluirEvento(id: string): Promise<ResultadoAcao> {
     return { ok: false, erro: "Este evento já recebeu trabalhos e não pode ser excluído. Use \"Encerrar evento\"." };
   }
 
+  const { count: certificados, error: erroCert } = await supabase
+    .from("certificados")
+    .select("id", { count: "exact", head: true })
+    .eq("evento_id", id);
+  if (erroCert) return { ok: false, erro: mensagemDoErro(erroCert) };
+  if (certificados) {
+    return { ok: false, erro: "Este evento já tem certificados emitidos e não pode ser excluído. Use \"Encerrar evento\"." };
+  }
+
   const { data: removido, error } = await supabase
     .from("eventos")
     .delete()

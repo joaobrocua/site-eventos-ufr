@@ -7,7 +7,7 @@ import { paraInstanteCuiaba } from "@/lib/datas";
 
 const RE_DATA = /^\d{4}-\d{2}-\d{2}$/;
 const RE_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
-const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Identificador (uuid) vindo da URL ou do cliente. */
 export const idSchema = z.string().regex(RE_UUID, "Identificador inválido.");
@@ -22,7 +22,7 @@ const data = (rotulo: string) => z.string().refine(dataValida, `Informe a ${rotu
 const hora = (rotulo: string) => z.string().regex(RE_HORA, `Informe a ${rotulo}.`);
 
 /** Texto opcional: vazio vira null. */
-const textoOpcional = (max: number, rotulo: string) =>
+export const textoOpcional = (max: number, rotulo: string) =>
   z
     .string()
     .trim()
@@ -93,7 +93,7 @@ export const inscricoesSchema = z
     inscricoes_ate: v.ate_data && v.ate_hora ? paraInstanteCuiaba(v.ate_data, v.ate_hora) : null,
   }));
 
-const inteiro = (v: string) => (/^\d{1,6}$/.test(v.trim()) ? Number(v.trim()) : NaN);
+export const inteiro = (v: string) => (/^\d{1,6}$/.test(v.trim()) ? Number(v.trim()) : NaN);
 
 export const atividadeSchema = z
   .object({

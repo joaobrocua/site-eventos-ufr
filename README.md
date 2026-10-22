@@ -5,6 +5,13 @@ várias atividades (palestras, minicursos, oficinas) em dias diferentes, inscri�
 escolha de atividades, vagas limitadas ou ilimitadas, check-in por QR code e painel da
 organização. Alternativa mais simples à Even3.
 
+> **Aviso:** este é um projeto desenvolvido por estudantes da UFR e **ainda não é um sistema
+> oficial da Universidade Federal de Rondonópolis**. O nome e o logo da UFR são marcas da
+> universidade e aparecem aqui apenas para identificar o contexto do projeto. Certificados
+> emitidos por instalações de teste ou de desenvolvimento não têm validade oficial.
+>
+> Os dados presentes no repositório (alunos, organizadores, e-mails `*.test`) são fictícios.
+
 ## O que já existe (fase 1)
 
 - **Público:** lista de eventos, página do evento com a programação por dia.
@@ -30,9 +37,20 @@ organização. Alternativa mais simples à Even3.
 - **E-mails:** ficam numa fila no banco e saem logo após a ação (`after()`); a rota
   `/api/cron/emails` reenvia pendentes (uma vez por dia na Vercel gratuita).
 
-Ainda não: certificados, CPF, pagamento, avaliação por pares e anais. Dependem de
-definições da coordenação (LGPD, exigências da pró-reitoria de extensão, conta de
-recebimento).
+## Certificados
+
+- Um certificado por participante por evento (atividades com presença e carga horária
+  total), mais certificados da equipe (palestrantes/ministrantes e organização/monitores).
+- A organização revisa as presenças e **libera** depois que todas as atividades terminam;
+  pode liberar de novo após correções (o código não muda; quem perdeu o direito é revogado).
+- PDF no padrão visual da UFR, com QR code e código de validação (`XXXX-XXXX-XXXX`);
+  qualquer pessoa confere a autenticidade em `/certificados/validar`.
+- Nome, documento, atividades e horas ficam congelados na emissão. Exemplos (dados
+  fictícios) em [`docs/exemplos`](docs/exemplos).
+
+Ainda não: CPF no certificado, imagem de assinatura, pagamento, avaliação por pares e
+anais. Dependem de definições da coordenação (LGPD, exigências da pró-reitoria de
+extensão, conta de recebimento).
 
 ## Regras importantes (ficam no banco, não só na tela)
 

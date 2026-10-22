@@ -73,3 +73,26 @@ export const ROTULO_MODALIDADE: Record<ModalidadeTrabalho, string> = {
 /** Bucket do Storage com os PDFs. Caminho: {evento_id}/{autor_id}/{trabalho_id}.pdf */
 export const BUCKET_TRABALHOS = "trabalhos";
 export const TAMANHO_MAX_PDF = 10 * 1024 * 1024;
+// ---------- Certificados ----------
+export type Certificado = Tabelas["certificados"]["Row"];
+export type MembroEquipe = Tabelas["equipe_evento"]["Row"];
+
+export type TipoCertificado = "participante" | "palestrante" | "organizacao";
+export const ROTULO_TIPO_CERTIFICADO: Record<TipoCertificado, string> = {
+  participante: "Participação",
+  palestrante: "Palestrante / ministrante",
+  organizacao: "Organização / monitoria",
+};
+
+/** eventos.certificado_assinaturas (até 3). */
+export type Assinatura = { nome: string; cargo: string };
+
+/** Item de certificados.atividades (retrato da emissão). */
+export type AtividadeCertificado = {
+  titulo: string;
+  tipo: TipoAtividade;
+  inicio: string;
+  /** ausente em certificados emitidos antes do campo existir */
+  fim?: string;
+  carga_horaria_minutos: number;
+};
