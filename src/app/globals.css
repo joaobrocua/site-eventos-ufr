@@ -37,40 +37,47 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Cores provisórias (azul acadêmico). Trocar por --primary oficial da UFR quando houver. */
+/* Cores da identidade da UFR (logo oficial):
+ *   azul-marinho #22376B (principal) · azul #086AB1 (destaques) · verde #53B366 (sucesso) */
 :root {
+  --ufr-marinho: #22376b;
+  --ufr-azul: #086ab1;
+  --ufr-verde: #53b366;
+
   --background: oklch(0.99 0.003 250);
-  --foreground: oklch(0.2 0.02 260);
+  --foreground: oklch(0.22 0.04 265);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 260);
+  --card-foreground: oklch(0.22 0.04 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 260);
-  --primary: oklch(0.47 0.16 262);
+  --popover-foreground: oklch(0.22 0.04 265);
+  --primary: var(--ufr-marinho);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.012 255);
-  --secondary-foreground: oklch(0.28 0.05 262);
-  --muted: oklch(0.965 0.006 255);
-  --muted-foreground: oklch(0.5 0.02 260);
-  --accent: oklch(0.95 0.025 255);
-  --accent-foreground: oklch(0.3 0.08 262);
+  --secondary: oklch(0.955 0.015 245);
+  --secondary-foreground: var(--ufr-marinho);
+  --muted: oklch(0.965 0.006 250);
+  --muted-foreground: oklch(0.5 0.025 260);
+  --accent: oklch(0.945 0.03 245);
+  --accent-foreground: var(--ufr-azul);
   --destructive: oklch(0.577 0.245 27.325);
-  --success: oklch(0.55 0.14 155);
+  /* verde da UFR um pouco mais escuro para texto legível em fundo claro */
+  --success: oklch(0.56 0.13 148);
   --warning: oklch(0.72 0.15 75);
-  --border: oklch(0.915 0.01 255);
-  --input: oklch(0.88 0.012 255);
-  --ring: oklch(0.47 0.16 262);
+  --border: oklch(0.915 0.012 250);
+  --input: oklch(0.88 0.015 250);
+  --ring: var(--ufr-azul);
   --radius: 0.75rem;
 }
 
 .dark {
-  --background: oklch(0.16 0.015 260);
+  --background: oklch(0.17 0.025 262);
   --foreground: oklch(0.97 0.005 255);
-  --card: oklch(0.21 0.02 260);
+  --card: oklch(0.22 0.03 262);
   --card-foreground: oklch(0.97 0.005 255);
-  --popover: oklch(0.21 0.02 260);
+  --popover: oklch(0.22 0.03 262);
   --popover-foreground: oklch(0.97 0.005 255);
-  --primary: oklch(0.7 0.14 258);
-  --primary-foreground: oklch(0.18 0.04 262);
+  /* no escuro o marinho some; usa o azul da UFR clareado */
+  --primary: oklch(0.72 0.12 248);
+  --primary-foreground: oklch(0.18 0.05 262);
   --secondary: oklch(0.27 0.02 260);
   --secondary-foreground: oklch(0.97 0.005 255);
   --muted: oklch(0.27 0.02 260);
@@ -78,7 +85,7 @@
   --accent: oklch(0.3 0.04 260);
   --accent-foreground: oklch(0.97 0.005 255);
   --destructive: oklch(0.704 0.191 22.216);
-  --success: oklch(0.7 0.14 155);
+  --success: oklch(0.72 0.14 148);
   --warning: oklch(0.8 0.14 80);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);

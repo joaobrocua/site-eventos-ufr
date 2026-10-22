@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays } from "lucide-react";
 import { obterPapel, obterUsuario } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -8,13 +8,22 @@ export async function Cabecalho() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
+      {/* Faixa com as três cores do logo da UFR */}
+      <div className="flex h-1" aria-hidden>
+        <span className="flex-1 bg-[var(--ufr-marinho)]" />
+        <span className="flex-1 bg-[var(--ufr-azul)]" />
+        <span className="flex-1 bg-[var(--ufr-verde)]" />
+      </div>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <CalendarDays className="size-5" aria-hidden />
-          </span>
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Eventos UFR, página inicial">
+          <Image src="/marca-ufr.png" alt="" width={366} height={412} className="h-9 w-auto" priority />
           <span className="leading-tight">
-            Eventos <span className="text-primary">UFR</span>
+            <span className="block font-semibold tracking-tight">
+              Eventos <span className="text-primary">UFR</span>
+            </span>
+            <span className="hidden text-xs text-muted-foreground sm:block">
+              Universidade Federal de Rondonópolis
+            </span>
           </span>
         </Link>
 

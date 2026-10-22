@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Cabecalho } from "@/components/site/cabecalho";
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2f4fb3",
+  themeColor: "#22376b",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -35,8 +36,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <Cabecalho />
         <main className="flex-1">{children}</main>
-        <footer className="border-t py-6 text-center text-sm text-muted-foreground">
-          Universidade Federal de Rondonópolis · Plataforma de eventos
+        <footer className="border-t bg-card">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-8 text-center text-sm text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
+            <a href="https://ufr.edu.br/" target="_blank" rel="noopener noreferrer" className="shrink-0">
+              {/* Logo com texto escuro: no tema escuro fica sobre um fundo branco */}
+              <span className="inline-block rounded-md bg-white p-1.5">
+                <Image
+                  src="/logo-ufr.png"
+                  alt="Universidade Federal de Rondonópolis"
+                  width={715}
+                  height={544}
+                  className="h-12 w-auto"
+                />
+              </span>
+            </a>
+            <p>
+              Plataforma de eventos acadêmicos da UFR ·{" "}
+              <a href="https://ufr.edu.br/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">
+                ufr.edu.br
+              </a>
+            </p>
+          </div>
         </footer>
         <Toaster richColors position="top-center" />
       </body>
