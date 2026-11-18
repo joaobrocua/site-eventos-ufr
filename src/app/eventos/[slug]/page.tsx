@@ -7,6 +7,7 @@ import { obterPerfil, obterUsuario } from "@/lib/auth";
 import { formatarData, formatarHora, formatarPeriodo } from "@/lib/datas";
 import { MENSAGEM_SITUACAO, situacaoInscricoes, submissoesAbertas } from "@/lib/inscricao/regras";
 import { createClient } from "@/lib/supabase/server";
+import { COLUNAS_EVENTO } from "@/lib/tipos";
 import { Button } from "@/components/ui/button";
 import type { AtividadePublica } from "@/components/publico/atividade-info";
 import { Programacao } from "@/components/publico/programacao";
@@ -17,7 +18,7 @@ const SLUG_VALIDO = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const buscarEvento = cache(async (slug: string) => {
   if (!SLUG_VALIDO.test(slug)) return null;
   const supabase = await createClient();
-  const { data } = await supabase.from("eventos").select("*").eq("slug", slug).maybeSingle();
+  const { data } = await supabase.from("eventos").select(COLUNAS_EVENTO).eq("slug", slug).maybeSingle();
   return data;
 });
 

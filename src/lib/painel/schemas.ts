@@ -51,16 +51,6 @@ export const eventoSchema = z
     local: textoOpcional(200, "O local"),
     data_inicio: data("data de início"),
     data_fim: data("data de término"),
-    capa_url: z
-      .string()
-      .trim()
-      .max(2000, "O link da imagem é muito longo.")
-      .optional()
-      .transform((v) => (v ? v : null))
-      .refine(
-        (v) => v === null || /^https?:\/\/\S+$/.test(v),
-        "O link da imagem deve começar com http:// ou https://.",
-      ),
   })
   .refine(
     (v) => !dataValida(v.data_inicio) || !dataValida(v.data_fim) || v.data_fim >= v.data_inicio,

@@ -22,6 +22,8 @@ export function FormEvento({ evento }: { evento?: Evento }) {
   const [slugManual, setSlugManual] = useState(editando);
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
+  // Evento já divulgado com endereço alterado: os links antigos vão quebrar.
+  const slugMudouDivulgado = !!evento && evento.status !== "rascunho" && slug.trim() !== evento.slug;
 
   // onSubmit (e não action=) para o React não limpar os campos se der erro.
   function enviar(e: React.FormEvent<HTMLFormElement>) {
@@ -92,6 +94,13 @@ export function FormEvento({ evento }: { evento?: Evento }) {
           }}
           className="h-11 text-base"
         />
+        {slugMudouDivulgado && (
+          <p role="alert" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+            Este evento já está publicado. Ao salvar, o endereço <strong>/eventos/{evento.slug}</strong>{" "}
+            deixa de funcionar: links já compartilhados, cartazes e QR codes da divulgação vão dar
+            &quot;página não encontrada&quot;.
+          </p>
+        )}
       </Campo>
 
       <Campo id="resumo" rotulo="Resumo" ajuda="Uma ou duas frases que aparecem na lista de eventos (até 300 letras).">
@@ -148,18 +157,6 @@ export function FormEvento({ evento }: { evento?: Evento }) {
           />
         </Campo>
       </div>
-
-      <Campo id="capa_url" rotulo="Link da imagem de capa (opcional)" ajuda="Endereço de uma imagem na internet, começando com https://.">
-        <Input
-          id="capa_url"
-          name="capa_url"
-          type="url"
-          inputMode="url"
-          placeholder="https://..."
-          defaultValue={evento?.capa_url ?? ""}
-          className="h-11 text-base"
-        />
-      </Campo>
 
       <MensagemErro erro={erro} />
 

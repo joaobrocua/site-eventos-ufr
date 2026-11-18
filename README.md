@@ -15,7 +15,7 @@ organização. Alternativa mais simples à Even3.
 ## O que já existe (fase 1)
 
 - **Público:** lista de eventos, página do evento com a programação por dia.
-- **Inscrição:** login sem senha (código de 6 dígitos no e-mail), cadastro rápido (nome,
+- **Inscrição:** login sem senha (código de 8 dígitos no e-mail), cadastro rápido (nome,
   RGA, curso), escolha das atividades com bloqueio de choque de horário e de vagas
   esgotadas.
 - **Minha área:** inscrições, atividades escolhidas, presença registrada e QR code pessoal.
@@ -95,6 +95,7 @@ rede local, use `npm run dev -- --experimental-https` ou um deploy.
 | Comando | O que faz |
 | --- | --- |
 | `npm run verificar` | tipos + lint + testes |
+| `npx supabase test db` | testes do banco (pgTAP: RLS, inscrições, certificados, auditoria) |
 | `npx supabase db reset` | recria o banco local com a migration e os dados de exemplo |
 | `npm run db:tipos` | regenera `src/lib/database.types.ts` após mudar o banco |
 
@@ -106,3 +107,35 @@ No Supabase Studio (SQL Editor):
 insert into public.organizadores (email, nome, papel)
 values ('fulano@ufr.edu.br', 'Fulano de Tal', 'organizador');
 ```
+
+## Checklist de produção
+
+O `supabase/config.toml` só vale para o banco local. No projeto do Supabase na nuvem,
+confira no painel (Authentication):
+
+- [ ] **Confirm email** ligado (organizador só é reconhecido com e-mail confirmado).
+- [ ] **Email OTP Length = 8** e **Email OTP Expiration = 900** segundos (o site pede 8 dígitos).
+- [ ] Modelo do e-mail de acesso igual a `supabase/templates/codigo.html`.
+- [ ] **Site URL** com o endereço `https://` do site.
+- [ ] Migrations aplicadas (`npx supabase db push`).
+
+Na hospedagem (variáveis de ambiente):
+
+- [ ] `NEXT_PUBLIC_SITE_URL` com `https://` (liga o `upgrade-insecure-requests` da CSP).
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` só no servidor; `CRON_SECRET` gerado; Resend configurado.
+
+Ainda em aberto (precisam de decisão ou de conta externa):
+
+- [ ] CAPTCHA no envio do código de acesso (Turnstile ou hCaptcha, no Supabase Auth).
+- [ ] Segundo fator (MFA) para contas da organização.
+- [ ] LGPD: página de privacidade, exclusão de conta e prazo de guarda dos dados.
+
+### Segurança: o que manter em mente
+
+- **CSP com nonce** (`src/lib/csp.ts`, aplicada em `src/proxy.ts`): script de fora do site
+  não roda. Biblioteca nova que baixe arquivo de CDN precisa servir o arquivo pelo próprio
+  site (como o WebAssembly do leitor de QR, copiado para `public/zxing/` no `postinstall`).
+- **Colunas de `eventos`**: a leitura pela API é liberada coluna por coluna (sem
+  `criado_por`). Coluna nova precisa entrar no `grant select (...)` de uma migration e em
+  `COLUNAS_EVENTO` (`src/lib/tipos.ts`); `select("*")` em eventos dá erro de permissão.
+- **CI** (`.github/workflows/ci.yml`): tipos, lint, testes, build e testes do banco a cada push.

@@ -9,14 +9,12 @@ const eventoOk = {
   local: "Auditório",
   data_inicio: "2026-11-10",
   data_fim: "2026-11-12",
-  capa_url: "",
 };
 
 describe("eventoSchema", () => {
   it("aceita um evento válido e converte vazios em null", () => {
     const r = eventoSchema.parse(eventoOk);
     expect(r.resumo).toBeNull();
-    expect(r.capa_url).toBeNull();
     expect(r.local).toBe("Auditório");
   });
 
@@ -39,11 +37,14 @@ describe("eventoSchema", () => {
     expect(eventoSchema.safeParse({ ...eventoOk, data_fim: "2026-11-10" }).success).toBe(true);
   });
 
-  it("rejeita data inexistente, resumo longo e capa sem http", () => {
+  it("rejeita data inexistente e resumo longo", () => {
     expect(eventoSchema.safeParse({ ...eventoOk, data_inicio: "2026-02-30" }).success).toBe(false);
     expect(eventoSchema.safeParse({ ...eventoOk, resumo: "x".repeat(301) }).success).toBe(false);
-    expect(eventoSchema.safeParse({ ...eventoOk, capa_url: "javascript:alert(1)" }).success).toBe(false);
-    expect(eventoSchema.safeParse({ ...eventoOk, capa_url: "https://x.com/a.png" }).success).toBe(true);
+  });
+
+  it("ignora capa_url (campo fora do formulário: um link externo seria bloqueado pela CSP)", () => {
+    const r = eventoSchema.parse({ ...eventoOk, capa_url: "https://x.com/a.png" });
+    expect(r).not.toHaveProperty("capa_url");
   });
 
   it("rejeita título curto", () => {

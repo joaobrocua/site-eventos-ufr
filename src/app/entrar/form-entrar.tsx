@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 const emailSchema = z.email("Digite um e-mail válido.");
 // Igual ao auth.email.max_frequency do Supabase: antes disso o reenvio é recusado.
 const ESPERA_REENVIO_S = 30;
+// Igual ao auth.email.otp_length do Supabase (8 dígitos: 6 seriam fáceis de chutar).
+const TAMANHO_CODIGO = 8;
 const SEM_CONEXAO = "Sem conexão. Verifique a internet e tente novamente.";
 
 async function pedirCodigo(email: string): Promise<string | null> {
@@ -82,8 +84,8 @@ export function FormEntrar({ destino }: { destino: string }) {
     e.preventDefault();
     setErro(null);
     const token = codigo.replace(/\D/g, "");
-    if (token.length !== 6) {
-      setErro("O código tem 6 números.");
+    if (token.length !== TAMANHO_CODIGO) {
+      setErro("O código tem 8 números.");
       return;
     }
     iniciar(async () => {
@@ -142,17 +144,17 @@ export function FormEntrar({ destino }: { destino: string }) {
               vale por 15 minutos. Confira também a caixa de spam.
             </p>
             <div className="space-y-2">
-              <Label htmlFor="codigo">Código de 6 dígitos</Label>
+              <Label htmlFor="codigo">Código de 8 dígitos</Label>
               <Input
                 id="codigo"
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 autoFocus
-                maxLength={6}
-                placeholder="000000"
+                maxLength={TAMANHO_CODIGO}
+                placeholder="00000000"
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ""))}
-                className="h-12 text-center font-mono text-2xl tracking-[0.5em]"
+                className="h-12 text-center font-mono text-2xl tracking-[0.3em]"
                 aria-invalid={Boolean(erro)}
                 aria-describedby={erro ? "erro-codigo" : undefined}
               />

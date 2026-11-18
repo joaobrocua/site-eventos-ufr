@@ -167,8 +167,19 @@ select throws_ok($$select * from public.registrar_presenca('codigo-rasc','200000
   null, null, 'presença não é registrada em evento rascunho');
 insert into public.eventos (slug, titulo, data_inicio, data_fim, criado_por)
   values ('t-forj','Forjado','2026-01-01','2026-01-01','00000000-0000-0000-0000-0000000000a1');
+-- criado_por não é legível pela API (nem para organizador): confere como superusuário.
+select throws_ok($$select criado_por from public.eventos where slug = 't-forj'$$,
+  '42501', null, 'criado_por não é legível pela API');
+select tests.logout();
 select is((select criado_por from public.eventos where slug = 't-forj'), '00000000-0000-0000-0000-0000000000c1'::uuid,
   'criado_por não pode ser forjado');
+
+-- Colunas de eventos: anon lê as públicas, mas não criado_por nem select *.
+select tests.login(null, 'anon');
+select lives_ok($$select id, slug, titulo, certificados_liberados_em from public.eventos$$,
+  'anon lê as colunas públicas de eventos');
+select throws_ok($$select criado_por from public.eventos$$, '42501', null, 'anon não lê criado_por');
+select throws_ok($$select * from public.eventos$$, '42501', null, 'select * em eventos é recusado');
 select tests.logout();
 
 select * from finish();

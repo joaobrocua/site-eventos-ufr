@@ -5,7 +5,11 @@ import type { Database } from "@/lib/database.types";
 type Tabelas = Database["public"]["Tables"];
 
 export type Perfil = Tabelas["perfis"]["Row"];
-export type Evento = Tabelas["eventos"]["Row"];
+// eventos.criado_por não é legível pela API (grant por coluna, migration 000004):
+// `select("*")` em eventos falha. Use COLUNAS_EVENTO.
+export type Evento = Omit<Tabelas["eventos"]["Row"], "criado_por">;
+export const COLUNAS_EVENTO =
+  "id, slug, titulo, resumo, descricao, local, data_inicio, data_fim, capa_url, status, inscricoes_abertas, inscricoes_ate, criado_em, atualizado_em, submissoes_abertas, submissoes_ate, submissao_instrucoes, areas_tematicas, certificado_texto, certificado_promotor, certificado_registro, certificado_assinaturas, certificados_liberados_em";
 export type Atividade = Tabelas["atividades"]["Row"];
 export type Inscricao = Tabelas["inscricoes"]["Row"];
 export type InscricaoAtividade = Tabelas["inscricoes_atividades"]["Row"];

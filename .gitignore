@@ -42,5 +42,8 @@ next-env.d.ts
 
 !.env.example
 
-# configuraÁ„o local de ferramentas (n„o publicar)
+# configura√ß√£o local de ferramentas (n√£o publicar)
 .claude/
+
+# WebAssembly do leitor de QR: copiado de node_modules no postinstall
+/public/zxing/

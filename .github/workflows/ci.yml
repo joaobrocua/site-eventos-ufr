@@ -1,0 +1,52 @@
+# Verificação automática a cada push e pull request.
+#   app:   tipos, lint, testes e build do Next.js
+#   banco: sobe só o Postgres do Supabase, aplica as migrations e roda os
+#          testes pgTAP (RLS, inscrições, certificados, auditoria)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Valores de mentira: o build não fala com o banco (as páginas são dinâmicas).
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:55421
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Gera os tipos de rota (PageProps, LayoutProps) que o tsc precisa.
+      - run: npx next typegen
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  banco:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+      - run: supabase db start
+      - run: supabase test db

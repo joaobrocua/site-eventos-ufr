@@ -232,7 +232,7 @@ secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "30s"
 # Number of characters used in the email OTP.
-otp_length = 6
+otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 900
 
@@ -246,7 +246,7 @@ otp_expiry = 900
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Login sem senha: o e-mail traz um código de 6 dígitos ({{ .Token }}).
+# Login sem senha: o e-mail traz um código de 8 dígitos ({{ .Token }}).
 # Usuário novo recebe "confirmation"; usuário existente recebe "magic_link".
 [auth.email.template.confirmation]
 subject = "Seu código de acesso - Eventos UFR"

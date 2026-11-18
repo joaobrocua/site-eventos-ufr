@@ -9,10 +9,22 @@ import { PainelResultado } from "./painel-resultado";
 import type { useRegistroPresenca } from "./use-registro-presenca";
 
 // A leitura de QR depende de APIs do navegador: nunca roda no servidor.
-const Scanner = dynamic(() => import("@yudiel/react-qr-scanner").then((m) => m.Scanner), {
-  ssr: false,
-  loading: () => <div className="aspect-square w-full animate-pulse rounded-xl bg-muted" />,
-});
+// O WebAssembly do leitor vem do próprio site (public/zxing/, copiado no
+// postinstall), e não do CDN padrão da biblioteca: a CSP só libera a origem do site.
+const Scanner = dynamic(
+  () =>
+    import("@yudiel/react-qr-scanner").then((m) => {
+      m.setZXingModuleOverrides({
+        locateFile: (caminho: string, prefixo: string) =>
+          caminho.endsWith(".wasm") ? "/zxing/zxing_reader.wasm" : prefixo + caminho,
+      });
+      return m.Scanner;
+    }),
+  {
+    ssr: false,
+    loading: () => <div className="aspect-square w-full animate-pulse rounded-xl bg-muted" />,
+  },
+);
 
 type Props = {
   registro: ReturnType<typeof useRegistroPresenca>;

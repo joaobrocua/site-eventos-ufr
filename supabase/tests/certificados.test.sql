@@ -200,5 +200,35 @@ select throws_ok($$delete from public.eventos where id = '10000000-0000-0000-000
   null, null, 'evento com certificados não pode ser excluído');
 select tests.logout();
 
+-- ---------- Auditoria das ações da organização ----------
+select ok(exists(select 1 from public.auditoria
+                 where acao = 'marcar_presenca_manual'
+                   and usuario_id = '00000000-0000-0000-0000-0000000000c1'
+                   and detalhes->>'atividade_id' = '20000000-0000-0000-0000-000000000002'
+                   and detalhes->>'presente' = 'false'),
+  'presença marcada à mão fica na auditoria');
+select ok(exists(select 1 from public.auditoria
+                 where acao = 'revogar_certificado'
+                   and usuario_id = '00000000-0000-0000-0000-0000000000c1'
+                   and detalhes->>'motivo' = 'Não compareceu ao evento.'
+                   and detalhes->>'evento_id' = '10000000-0000-0000-0000-000000000001'),
+  'revogação manual fica na auditoria com o motivo');
+select ok(exists(select 1 from public.auditoria
+                 where acao = 'equipe_incluir' and detalhes->>'membro_id' = '30000000-0000-0000-0000-000000000001'),
+  'inclusão na equipe fica na auditoria');
+select ok(exists(select 1 from public.auditoria
+                 where acao = 'equipe_alterar' and detalhes->>'membro_id' = '30000000-0000-0000-0000-000000000001'),
+  'alteração na equipe fica na auditoria');
+select ok(exists(select 1 from public.auditoria
+                 where acao = 'equipe_remover'
+                   and usuario_id = '00000000-0000-0000-0000-0000000000c1'
+                   and detalhes->>'membro_id' = '30000000-0000-0000-0000-000000000002'),
+  'remoção da equipe fica na auditoria com quem removeu');
+select tests.login('00000000-0000-0000-0000-0000000000c1');
+select throws_ok($$select public._auditar_equipe_evento()$$, '42501', null,
+  'função do gatilho de auditoria não é chamável pela API');
+select is((select count(*)::int from public.auditoria), 0, 'organizador comum não lê a auditoria');
+select tests.logout();
+
 select * from finish();
 rollback;

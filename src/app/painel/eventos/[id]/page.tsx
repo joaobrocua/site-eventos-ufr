@@ -9,7 +9,7 @@ import { type TrabalhoPainel } from "@/lib/painel/trabalhos";
 import { atividadesPendentes } from "@/lib/painel/certificados";
 import { idSchema } from "@/lib/painel/schemas";
 import { createClient } from "@/lib/supabase/server";
-import { ROTULO_STATUS_EVENTO, type StatusEvento, type StatusTrabalho } from "@/lib/tipos";
+import { COLUNAS_EVENTO, ROTULO_STATUS_EVENTO, type StatusEvento, type StatusTrabalho } from "@/lib/tipos";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export default async function PaginaEvento({
   const abaInicial = ABAS.find((a) => a === aba) ?? "geral";
 
   const supabase = await createClient();
-  const { data: evento } = await supabase.from("eventos").select("*").eq("id", id).maybeSingle();
+  const { data: evento } = await supabase.from("eventos").select(COLUNAS_EVENTO).eq("id", id).maybeSingle();
   if (!evento) notFound();
 
   const [{ data: atividadesDb, error: erroAtividades }, inscritosRes, vagasRes, trabalhosRes, certificadosRes, equipeRes, emailsRes] = await Promise.all([

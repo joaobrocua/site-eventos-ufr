@@ -6,6 +6,8 @@ import { FormCadastro } from "./form-cadastro";
 
 export const metadata: Metadata = { title: "Complete seu cadastro" };
 
+const DESTINOS_SEM_CADASTRO = ["/minha-area/certificados", "/certificados"];
+
 export default async function PaginaCadastro({ searchParams }: PageProps<"/cadastro">) {
   const { proximo, editar } = await searchParams;
   const destino = caminhoSeguro(typeof proximo === "string" ? proximo : null, "/minha-area");
@@ -16,6 +18,11 @@ export default async function PaginaCadastro({ searchParams }: PageProps<"/cadas
   if (perfil && editar !== "1") redirect(destino);
   // Organizador indo para o painel não precisa de cadastro de participante.
   if (!perfil && destino.startsWith("/painel") && (await obterPapel())) redirect(destino);
+  // Equipe do evento (palestrante/monitor) baixa o certificado sem cadastro de
+  // participante: essas páginas só exigem login.
+  if (!perfil && DESTINOS_SEM_CADASTRO.some((p) => destino === p || destino.startsWith(`${p}/`))) {
+    redirect(destino);
+  }
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6 px-4 py-12">

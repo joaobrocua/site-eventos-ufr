@@ -17,7 +17,7 @@ export default async function PaginaEntrar({ searchParams }: PageProps<"/entrar"
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Entrar</h1>
         <p className="text-muted-foreground">
-          Sem senha: enviamos um código de 6 dígitos para o seu e-mail.
+          Sem senha: enviamos um código de 8 dígitos para o seu e-mail.
         </p>
       </div>
       <FormEntrar destino={destino} />
